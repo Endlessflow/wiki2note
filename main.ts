@@ -3,6 +3,9 @@ import { App, Plugin, Modal, Notice } from "obsidian";
 const fetch = (...args) =>
 	import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+// Set this to true to enable the fallback language model
+const USE_FALLBACK_LLM = true;
+
 export default class Wiki2note extends Plugin {
 	async onload() {
 		// This creates an icon in the left ribbon.
@@ -47,7 +50,7 @@ async function getArticleSummary(title: string) {
 }
 
 // Function to search Wikipedia for a given term and return summaries
-async function searchWikipedia(searchTerm: string) {
+async function searchWikipedia(searchTerm: string, exitOnFail = false) : Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>>{
 	// Add a slight delay before search to prevent burst requests
 	await new Promise((resolve) => setTimeout(resolve, 200));
 
@@ -68,13 +71,66 @@ async function searchWikipedia(searchTerm: string) {
 			titles.map((title: string) => getArticleSummary(title))
 		);
 		new Notice(`Found ${summaries.length} results.`);
+		if (summaries.length === 0 && exitOnFail === false) {
+			if (USE_FALLBACK_LLM === true) {
+				new Notice(
+					`No results found. Trying to search using the fallback language model.`
+				);
+				return await llmAssistedSearchFallback(searchTerm);
+			}
+		}
 		return summaries; // Returns an array of objects with trueTitle, summary, and trueUrl
 	} catch (error) {
-		console.error("Error searching Wikipedia:", error);
 		new Notice(`Error searching Wikipedia.`);
-		return [];
+		return Promise.resolve([]);
 	}
 }
+
+async function llmAssistedSearchFallback(searchTerm: string) : Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>> {
+	const openAIKey = process.env.OPENAI_API_KEY;
+	if (!openAIKey) {
+		new Notice(
+			`OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.`
+		);
+		return [];
+	} else {
+		try {
+			const response = await fetch('https://api.openai.com/v1/chat/completions', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${openAIKey}`,
+			},
+			body: JSON.stringify({
+				"model": "gpt-3.5-turbo",
+				"messages": [
+				{
+					"role": "user",
+					"content": `The user is attempting to find a Wikipedia article and need your assistance.\n\nGiven the following query by the user:\n\"${searchTerm}\"\n\nPonder on what the user is trying to find and suggest the proper keyword to query in an opensearch query to the English Wikipedia official API.\n\nAnswer in a JSON format containing the \`query\` attribute.`
+				}
+				],
+				"max_tokens": 50,
+				"response_format": { "type": "json_object" },
+			})
+			});
+
+			const data = (await response.json()) as any;
+			const answer = JSON.parse(data.choices[0].message.content);
+			new Notice(`Fallback language model response: ${answer}`);
+			if (!answer.query) {
+				new Notice(`No query found in the response. Exiting.`);
+				return [];
+			}
+			new Notice(`Attempting to search Wikipedia using the suggested query: ${answer.query}.`);
+			return await searchWikipedia(answer.query, true);
+		
+		} catch (error) {
+			new Notice(`Error searching Wikipedia using the fallback language model.`);
+			return Promise.resolve([]);
+		}
+	}
+}
+
 
 class WikipediaSearchModal extends Modal {
 	private resultsContainer: HTMLElement | null;
