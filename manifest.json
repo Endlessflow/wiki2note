@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "wiki2note",
+	"name": "wiki2note",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"description": "a simple Obsidian plugin that allows for quick searches and note creation using the Wikipedia database through the official API as a single source of truth.",
+	"author": "Endlessflow",
+	"authorUrl": "https://github.com/Endlessflow/wiki2note",
+	"isDesktopOnly": true
 }
