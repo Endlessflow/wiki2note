@@ -1,0 +1,56 @@
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+.quick-switcher {
+    display: flex;
+    flex-direction: column;
+}
+
+.quick-switcher-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.quick-switcher-results {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.quick-switcher-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Custom hover style for list items */
+.quick-switcher-item:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Light hover background */
+    color: #fff; /* White text */
+}
+
+/* Styling for search result titles */
+.quick-switcher-item-title {
+    font-size: 1.1em; /* Larger text for titles */
+    font-weight: bold;
+    margin-bottom: 4px; /* Space between title and summary */
+}
+
+/* Styling for search result summaries */
+.quick-switcher-item-summary {
+    font-size: 0.9em; /* Smaller text for summaries */
+    color: #888; /* Lighter color for less emphasis */
+    max-height: 4em; /* Limit the height of summaries */
+    overflow: hidden; /* Hide overflowed text */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+/* Modal adjustments */
+.quick-switcher {
+    max-height: 70vh; /* Adjust based on your needs */
+    overflow-y: auto; /* Enable scrolling */
+}
