@@ -6,6 +6,9 @@ const fetch = (...args) =>
 // Set this to true to enable the fallback language model
 const USE_FALLBACK_LLM = true;
 
+const ERROR_MESSAGE_DURATION = 8000;
+const NOTICE_MESSAGE_DURATION = 4000;
+
 export default class Wiki2note extends Plugin {
 	async onload() {
 		// This creates an icon in the left ribbon.
@@ -50,7 +53,10 @@ async function getArticleSummary(title: string) {
 }
 
 // Function to search Wikipedia for a given term and return summaries
-async function searchWikipedia(searchTerm: string, exitOnFail = false) : Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>>{
+async function searchWikipedia(
+	searchTerm: string,
+	exitOnFail = false
+): Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>> {
 	// Add a slight delay before search to prevent burst requests
 	await new Promise((resolve) => setTimeout(resolve, 200));
 
@@ -70,67 +76,79 @@ async function searchWikipedia(searchTerm: string, exitOnFail = false) : Promise
 		const summaries = await Promise.all(
 			titles.map((title: string) => getArticleSummary(title))
 		);
-		new Notice(`Found ${summaries.length} results.`);
 		if (summaries.length === 0 && exitOnFail === false) {
 			if (USE_FALLBACK_LLM === true) {
 				new Notice(
-					`No results found. Trying to search using the fallback language model.`
+					`No results found. Trying to search using the fallback language model.`,
+					NOTICE_MESSAGE_DURATION
 				);
 				return await llmAssistedSearchFallback(searchTerm);
 			}
 		}
 		return summaries; // Returns an array of objects with trueTitle, summary, and trueUrl
 	} catch (error) {
-		new Notice(`Error searching Wikipedia.`);
+		new Notice(`Error searching Wikipedia.`, ERROR_MESSAGE_DURATION);
 		return Promise.resolve([]);
 	}
 }
 
-async function llmAssistedSearchFallback(searchTerm: string) : Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>> {
+async function llmAssistedSearchFallback(
+	searchTerm: string
+): Promise<Array<{ trueTitle: string; summary: string; trueUrl: string }>> {
 	const openAIKey = process.env.OPENAI_API_KEY;
 	if (!openAIKey) {
 		new Notice(
-			`OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.`
+			`OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.`,
+			ERROR_MESSAGE_DURATION
 		);
 		return [];
 	} else {
 		try {
-			const response = await fetch('https://api.openai.com/v1/chat/completions', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${openAIKey}`,
-			},
-			body: JSON.stringify({
-				"model": "gpt-3.5-turbo",
-				"messages": [
+			const response = await fetch(
+				"https://api.openai.com/v1/chat/completions",
 				{
-					"role": "user",
-					"content": `The user is attempting to find a Wikipedia article and need your assistance.\n\nGiven the following query by the user:\n\"${searchTerm}\"\n\nPonder on what the user is trying to find and suggest the proper keyword to query in an opensearch query to the English Wikipedia official API.\n\nAnswer in a JSON format containing the \`query\` attribute.`
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${openAIKey}`,
+					},
+					body: JSON.stringify({
+						model: "gpt-3.5-turbo",
+						messages: [
+							{
+								role: "user",
+								content: `The user is attempting to find a Wikipedia article and need your assistance.\n\nGiven the following query by the user:\n\"${searchTerm}\"\n\nPonder on what the user is trying to find and suggest the proper keyword to query in an opensearch query to the English Wikipedia official API.\n\nAnswer in a JSON format containing the \`query\` attribute.`,
+							},
+						],
+						max_tokens: 50,
+						response_format: { type: "json_object" },
+					}),
 				}
-				],
-				"max_tokens": 50,
-				"response_format": { "type": "json_object" },
-			})
-			});
+			);
 
 			const data = (await response.json()) as any;
 			const answer = JSON.parse(data.choices[0].message.content);
-			new Notice(`Fallback language model response: ${answer}`);
 			if (!answer.query) {
-				new Notice(`No query found in the response. Exiting.`);
+				new Notice(
+					`The model failed to respond. Exiting.`,
+					ERROR_MESSAGE_DURATION
+				);
 				return [];
 			}
-			new Notice(`Attempting to search Wikipedia using the suggested query: ${answer.query}.`);
+			new Notice(
+				`Searching for:\n${answer.query}`,
+				NOTICE_MESSAGE_DURATION
+			);
 			return await searchWikipedia(answer.query, true);
-		
 		} catch (error) {
-			new Notice(`Error searching Wikipedia using the fallback language model.`);
+			new Notice(
+				`Error searching Wikipedia using the fallback language model.`,
+				ERROR_MESSAGE_DURATION
+			);
 			return Promise.resolve([]);
 		}
 	}
 }
-
 
 class WikipediaSearchModal extends Modal {
 	private resultsContainer: HTMLElement | null;
@@ -165,7 +183,6 @@ class WikipediaSearchModal extends Modal {
 									})
 								)
 							);
-							//new Notice(`Found ${results.length} results.`)
 						} else {
 							this.clearResults();
 						}
@@ -238,7 +255,10 @@ class WikipediaSearchModal extends Modal {
 				`keyword/${result.title}.md`
 			) !== null
 		) {
-			new Notice(`Note already exists: ${result.title}`);
+			new Notice(
+				`Note already exists: ${result.title}`,
+				NOTICE_MESSAGE_DURATION
+			);
 			// open the note
 			let leaf = this.app.workspace.getLeaf("split", "vertical");
 			if (!leaf) leaf = this.app.workspace.getLeaf();
@@ -253,7 +273,10 @@ class WikipediaSearchModal extends Modal {
 				filePath,
 				`${result.summary}\n\n[Read more on Wikipedia](${result.url})\n\n---\n\n`
 			);
-			new Notice(`Note created: ${result.title}`);
+			new Notice(
+				`Note created: ${result.title}`,
+				NOTICE_MESSAGE_DURATION
+			);
 		}
 		this.close();
 	}
