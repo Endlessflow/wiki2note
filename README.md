@@ -1,25 +1,50 @@
-# Wiki2note
+# Wiki2note for Obsidian
 
-A simple obsidian plugin that aim to allow for quick search to the wikipedia database throught the official API. If the chosen article already exist in the vault it opens it or else it creates a note in a `keyword` folder with the title of the chosen article, a summary of the article and a link to the full wikipedia article.
+## Introduction
 
+Wiki2note is an Obsidian plugin born from personal challenges I faced in managing and organizing information effectively on Obsidian. It aims to simplify the process of creating a coherent and accessible knowledge vault by leveraging the structured repository of Wikipedia as a single source of truth.
 
-# Why ?
+## How Wiki2note Works
 
-In my studying workflow keyword hunting is my first step and my vault is setup such that keywords concepts are the basic unit of knowledge.
+Wiki2note simplifies knowledge management by addressing common issues such as note duplication and the challenge of identifying relevant keywords. By integrating directly with Wikipedia, it provides a consistent source of truth for note titles. 
 
-I then use those concept and link them together with logical relationships to create propositions.
+Here’s how it enhances your workflow:
 
-Those propositions are stored in principles/theories notes.
+- **Seamless Wikipedia Integration:** The plugin uses Wikipedia's API to fetch and integrate articles into your Obsidian vault, reducing the friction during the keyword concept hunting process.
+- **Automated Note Creation:** If a concept doesn't exist in your vault, Wiki2note automatically creates a new note with the standardized title from the selected EN Wikipedia entry. This ensures consistency and prevent note fragmentation.
+- **Encourages Discovery and Learning:** By adding a summary and a direct link to the original Wikipedia article to the generated note, the plugin invites exploration and serendipitous learning.
 
-So the reason for wiki2note is simply that I found myself often having several keyword notes on the same topics due to simple typo or the use of different ways to formulate a same concept.
+## Advanced Search and Multilingual Support with OpenAI GPT-3
 
-Wiki2note is my solution to this issue by using wikipedia notes as a single source of truth. It allows me to normalize the name of all my keyword notes.
+Another features of the plugin is its integration with OpenAI's GPT-3, which comes into play when initial searches return no matches. This simple fallback mechanism enhances the plugin’s search functionality by introducing a semantic component to the process, enabling more nuanced and contextually aware queries.
 
+- **Semantic Search Enhancement:** When a query yields no results, Wiki2note leverages GPT-3 to reinterpret the search terms, considering their semantic meaning and context. This approach often leads to the discovery of relevant articles that might have been missed due to the rigidity of Wikipedia's keyword-based search.
+  
+- **Facilitating Serendipitous Discovery:** This semantic search capability opens up avenues for serendipitous learning, guiding users to articles and concepts they might not have directly searched for.
 
-# Manually installing the plugin
+- **Multilingual Query Support:** Another significant advantage of integrating GPT-3 is its ability to bridge the language divide. Users can input queries in one language, and the plugin will still find the corresponding English Wikipedia article, ensuring all information remains anchored to a single, consistent source of truth. 
 
-Copy over main.js, styles.css, manifest.json to your vault VaultFolder/.obsidian/plugins/your-plugin-id/.
+## Demo
 
-# License
+![Sorry. It seems you can't view GIFs on your device.](asset/wiki2note_demo.gif)
 
-This project is licensed under the terms of the MIT license. Have fun with it.
+## Getting Started
+
+1. **Manual Installation:** From the release, download `main.js`, `styles.css`, and `manifest.json` and place them in your `VaultFolder/.obsidian/plugins/wiki2note/`.
+2. **Open AI Key:** to use the gpt-3 enabled fallback search feature you need to set a valid openai API key as an environment variable called `OPENAI_API_KEY`.
+3. **Usage:** Activate the plugin in Obsidian and optionally set a custom keybind.
+
+## Developpers
+
+This plugin is built from the official sample plugin realeased by the obsidian team. For detailed instruction on how to compile the plugin yourself and make modifications, please refer to the [README](https://github.com/obsidianmd/obsidian-sample-plugin) of the official sample plugin.
+
+TLDR :
+1. `git clone https://github.com/Endlessflow/wiki2note.git` inside your plugin folder
+2. `npm i`
+3. `npm run dev` (this compiles and listens to changes in your main.ts)
+4. make changes
+5. reload obsidian to see changes
+
+## License
+
+Wiki2note is open-source, available under the MIT license. You’re encouraged to explore the code, contribute, or customize it to suit your workflow.
